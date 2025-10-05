@@ -1,41 +1,54 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@/components': path.resolve(__dirname, './src/components'),
-      '@/hooks': path.resolve(__dirname, './src/hooks'),
-      '@/utils': path.resolve(__dirname, './src/utils'),
-      '@/types': path.resolve(__dirname, './src/types'),
-      '@/wasm': path.resolve(__dirname, './src/wasm')
-    }
-  },
-  optimizeDeps: {
-    exclude: ['@monaco-editor/react']
-  },
+  
   build: {
-    target: 'esnext',
+    // Don't inline WASM files - serve them as separate assets
+    assetsInlineLimit: 0,
+    
     rollupOptions: {
       output: {
+        // Split Monaco Editor into separate chunk for better caching
         manualChunks: {
-          'monaco-editor': ['@monaco-editor/react'],
-          'wasm-modules': ['./src/wasm/wasm-loader', './src/wasm/analysis-engine']
+          'monaco': ['@monaco-editor/react', 'monaco-editor']
         }
       }
-    }
-  },
-  server: {
-    fs: {
-      allow: ['..', './public/wasm']
     },
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp'
-    }
+    
+    // Optimize for production
+    minify: 'terser',
+    sourcemap: process.env.NODE_ENV === 'development'
+  },
+  
+  // Optimize dependencies for faster dev server startup
+  optimizeDeps: {
+    include: [
+      '@monaco-editor/react',
+      'monaco-editor'
+    ]
+  },
+  
+  // Ensure public directory is correctly served
+  publicDir: 'public',
+  
+  // Configure server for development
+  server: {
+    port: 3000,
+    open: true,
+    cors: true
+  },
+  
+  // Preview server configuration
+  preview: {
+    port: 4173,
+    open: true
+  },
+  
+  // Define global constants for the application
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString())
   }
-})
+});
