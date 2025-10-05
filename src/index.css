@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 84% 4.9%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Monaco Editor Overrides */
+  .monaco-editor {
+    @apply !bg-background;
+  }
+  
+  .monaco-editor .margin {
+    @apply !bg-background;
+  }
+  
+  .monaco-editor .monaco-editor-background {
+    @apply !bg-background;
+  }
+}
+
+@layer components {
+  /* Loading Animation */
+  .loading-dots {
+    @apply inline-flex gap-1;
+  }
+  
+  .loading-dots span {
+    @apply h-2 w-2 bg-current rounded-full animate-pulse;
+    animation-delay: calc(var(--i) * 0.2s);
+  }
+  
+  /* Vulnerability Severity Badges */
+  .severity-critical {
+    @apply bg-red-500/20 text-red-400 border-red-500/30;
+  }
+  
+  .severity-high {
+    @apply bg-orange-500/20 text-orange-400 border-orange-500/30;
+  }
+  
+  .severity-medium {
+    @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30;
+  }
+  
+  .severity-low {
+    @apply bg-blue-500/20 text-blue-400 border-blue-500/30;
+  }
+  
+  .severity-info {
+    @apply bg-gray-500/20 text-gray-400 border-gray-500/30;
+  }
+}
