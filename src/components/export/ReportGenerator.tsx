@@ -1,0 +1,280 @@
+import { AuditResults, AuditReport, ExportFormat, ReportOptions } from '@/types/audit.types'
+import { VulnerabilitySeverity } from '@/types/vulnerability.types'
+
+/**
+ * Generate audit report content based on results and options
+ */
+export const generateReport = async (
+  results: AuditResults, 
+  options: ReportOptions
+): Promise<AuditReport> => {
+  const timestamp = new Date()
+  const title = `SafeSolidity Lite Audit Report`
+  
+  let content: string
+  let filename: string
+  let mimeType: string
+
+  switch (options.format) {
+    case ExportFormat.MARKDOWN:
+      content = generateMarkdownReport(results, options)
+      filename = `audit-report-${timestamp.getTime()}.md`
+      mimeType = 'text/markdown'
+      break
+      
+    case ExportFormat.JSON:
+      content = generateJSONReport(results, options)
+      filename = `audit-report-${timestamp.getTime()}.json`
+      mimeType = 'application/json'
+      break
+      
+    case ExportFormat.HTML:
+      content = generateHTMLReport(results, options)
+      filename = `audit-report-${timestamp.getTime()}.html`
+      mimeType = 'text/html'
+      break
+      
+    default:
+      throw new Error(`Unsupported export format: ${options.format}`)
+  }
+
+  return {
+    title,
+    timestamp,
+    results,
+    content,
+    filename,
+    mimeType
+  }
+}
+
+/**
+ * Generate Markdown format report
+ */
+function generateMarkdownReport(results: AuditResults, options: ReportOptions): string {
+  const lines: string[] = []
+  
+  // Header
+  lines.push('# SafeSolidity Lite - Security Audit Report')
+  lines.push('')
+  
+  if (options.timestamp) {
+    lines.push(`**Generated:** ${new Date().toISOString()}`)
+    lines.push('')
+  }
+  
+  if (options.includeMetadata && results.metadata) {
+    lines.push('## Contract Information')
+    lines.push('')
+    lines.push(`- **Lines of Code:** ${results.metadata.linesOfCode}`)
+    lines.push(`- **Functions:** ${results.metadata.functions}`)
+    lines.push(`- **Analysis Duration:** ${results.metadata.duration}ms`)
+    if (results.metadata.compiler) {
+      lines.push(`- **Compiler:** ${results.metadata.compiler}`)
+    }
+    lines.push('')
+  }
+  
+  // Summary
+  lines.push('## Summary')
+  lines.push('')
+  lines.push(`Total Issues Found: **${results.summary.total}**`)
+  lines.push('')
+  lines.push('| Severity | Count |')
+  lines.push('|----------|-------|')
+  lines.push(`| Critical | ${results.summary.critical} |`)
+  lines.push(`| High     | ${results.summary.high} |`)
+  lines.push(`| Medium   | ${results.summary.medium} |`)
+  lines.push(`| Low      | ${results.summary.low} |`)
+  lines.push(`| Info     | ${results.summary.info} |`)
+  lines.push('')
+  lines.push(`**Risk Score:** ${results.summary.riskScore}/100`)
+  lines.push('')
+  
+  // Vulnerabilities
+  if (results.vulnerabilities.length > 0) {
+    lines.push('## Detected Vulnerabilities')
+    lines.push('')
+    
+    results.vulnerabilities.forEach((vuln, index) => {
+      // Skip if severity filter is applied
+      if (options.severityFilter && !options.severityFilter.includes(vuln.severity)) {
+        return
+      }
+      
+      lines.push(`### ${index + 1}. ${vuln.title}`)
+      lines.push('')
+      lines.push(`**Severity:** ${vuln.severity}`)
+      lines.push(`**Category:** ${vuln.category}`)
+      lines.push(`**Confidence:** ${vuln.confidence}%`)
+      lines.push('')
+      lines.push(`**Description:**`)
+      lines.push(vuln.description)
+      lines.push('')
+      
+      if (vuln.location) {
+        lines.push(`**Location:**`)
+        if (vuln.location.function) {
+          lines.push(`- Function: \`${vuln.location.function}\``)
+        }
+        if (vuln.location.line) {
+          lines.push(`- Line: ${vuln.location.line}${vuln.location.column ? `:${vuln.location.column}` : ''}`)
+        }
+        lines.push('')
+      }
+      
+      if (options.includeCode && vuln.codeSnippet) {
+        lines.push(`**Code:**`)
+        lines.push('```solidity')
+        lines.push(vuln.codeSnippet)
+        lines.push('```')
+        lines.push('')
+      }
+      
+      if (options.includeRecommendations) {
+        lines.push(`**Recommendation:**`)
+        lines.push(vuln.recommendation)
+        lines.push('')
+      }
+      
+      if (vuln.references && vuln.references.length > 0) {
+        lines.push(`**References:**`)
+        vuln.references.forEach(ref => {
+          lines.push(`- ${ref}`)
+        })
+        lines.push('')
+      }
+      
+      lines.push('---')
+      lines.push('')
+    })
+  }
+  
+  // Recommendations
+  if (options.includeRecommendations && results.recommendations.length > 0) {
+    lines.push('## General Recommendations')
+    lines.push('')
+    results.recommendations.forEach((rec, index) => {
+      lines.push(`${index + 1}. ${rec}`)
+    })
+    lines.push('')
+  }
+  
+  // Footer
+  if (options.branding) {
+    lines.push('---')
+    lines.push('')
+    lines.push('*Report generated by [SafeSolidity Lite](https://github.com/Gzeu/safesolidity-lite)*')
+    lines.push('*Static analysis performed locally in browser using WebAssembly*')
+  }
+  
+  return lines.join('\n')
+}
+
+/**
+ * Generate JSON format report
+ */
+function generateJSONReport(results: AuditResults, options: ReportOptions): string {
+  const report = {
+    title: 'SafeSolidity Lite Security Audit Report',
+    timestamp: options.timestamp ? new Date().toISOString() : undefined,
+    summary: results.summary,
+    metadata: options.includeMetadata ? results.metadata : undefined,
+    vulnerabilities: results.vulnerabilities.filter(vuln => 
+      !options.severityFilter || options.severityFilter.includes(vuln.severity)
+    ).map(vuln => ({
+      ...vuln,
+      codeSnippet: options.includeCode ? vuln.codeSnippet : undefined
+    })),
+    recommendations: options.includeRecommendations ? results.recommendations : undefined,
+    engines: results.engines,
+    generator: options.branding ? 'SafeSolidity Lite' : undefined
+  }
+  
+  return JSON.stringify(report, null, 2)
+}
+
+/**
+ * Generate HTML format report
+ */
+function generateHTMLReport(results: AuditResults, options: ReportOptions): string {
+  const getSeverityColor = (severity: VulnerabilitySeverity): string => {
+    switch (severity) {
+      case VulnerabilitySeverity.CRITICAL: return '#dc2626'
+      case VulnerabilitySeverity.HIGH: return '#ea580c'
+      case VulnerabilitySeverity.MEDIUM: return '#ca8a04'
+      case VulnerabilitySeverity.LOW: return '#2563eb'
+      default: return '#6b7280'
+    }
+  }
+  
+  const vulnerabilities = results.vulnerabilities.filter(vuln => 
+    !options.severityFilter || options.severityFilter.includes(vuln.severity)
+  )
+  
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeSolidity Lite - Audit Report</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 40px; background: #0f0f0f; color: #e5e5e5; }
+    h1, h2, h3 { color: #ffffff; }
+    .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+    .summary { background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+    .vulnerability { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .severity { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
+    .code { background: #111; border: 1px solid #333; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; }
+    .recommendation { background: #1e3a8a20; border: 1px solid #3b82f6; padding: 15px; border-radius: 4px; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
+    th { background: #333; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #333; text-align: center; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>SafeSolidity Lite - Security Audit Report</h1>
+    ${options.timestamp ? `<p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>` : ''}
+  </div>
+  
+  <div class="summary">
+    <h2>Summary</h2>
+    <p><strong>Total Issues Found:</strong> ${results.summary.total}</p>
+    <table>
+      <tr><th>Severity</th><th>Count</th></tr>
+      <tr><td>Critical</td><td>${results.summary.critical}</td></tr>
+      <tr><td>High</td><td>${results.summary.high}</td></tr>
+      <tr><td>Medium</td><td>${results.summary.medium}</td></tr>
+      <tr><td>Low</td><td>${results.summary.low}</td></tr>
+      <tr><td>Info</td><td>${results.summary.info}</td></tr>
+    </table>
+    <p><strong>Risk Score:</strong> ${results.summary.riskScore}/100</p>
+  </div>
+  
+  ${vulnerabilities.length > 0 ? `
+    <h2>Detected Vulnerabilities</h2>
+    ${vulnerabilities.map((vuln, index) => `
+      <div class="vulnerability">
+        <h3>${index + 1}. ${vuln.title}</h3>
+        <p><span class="severity" style="background-color: ${getSeverityColor(vuln.severity)}">${vuln.severity}</span></p>
+        <p><strong>Description:</strong> ${vuln.description}</p>
+        ${vuln.location ? `<p><strong>Location:</strong> ${vuln.location.function ? `Function: ${vuln.location.function}` : ''} ${vuln.location.line ? `Line: ${vuln.location.line}` : ''}</p>` : ''}
+        ${options.includeCode && vuln.codeSnippet ? `<div class="code">${vuln.codeSnippet}</div>` : ''}
+        ${options.includeRecommendations ? `<div class="recommendation"><strong>Recommendation:</strong> ${vuln.recommendation}</div>` : ''}
+      </div>
+    `).join('')}
+  ` : ''}
+  
+  ${options.branding ? `
+    <div class="footer">
+      <p>Report generated by <strong>SafeSolidity Lite</strong></p>
+      <p>Static analysis performed locally in browser using WebAssembly</p>
+    </div>
+  ` : ''}
+</body>
+</html>`
+}
+
+export { generateMarkdownReport, generateJSONReport, generateHTMLReport }
