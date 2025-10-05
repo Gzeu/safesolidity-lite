@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { AuditResults, AuditStatus, AnalysisProgress } from '@/types/audit.types'
+import { AuditResults, AnalysisProgress } from '@/types/audit.types'
 import { analyzeContract } from '@/wasm/analysis-engine'
 
 interface UseCodeAnalysisReturn {
@@ -58,7 +58,8 @@ export const useCodeAnalysis = (): UseCodeAnalysisReturn => {
       updateProgress('Initializing', 0, 'Starting analysis engine...')
       
       // Basic code validation
-      if (code.length > (import.meta.env.VITE_MAX_CONTRACT_SIZE || 1048576)) {
+      const maxSize = parseInt(import.meta.env.VITE_MAX_CONTRACT_SIZE || '1048576', 10)
+      if (code.length > maxSize) {
         throw new Error('Contract size exceeds maximum limit (1MB)')
       }
 
@@ -74,11 +75,7 @@ export const useCodeAnalysis = (): UseCodeAnalysisReturn => {
       updateProgress('Analyzing', 50, 'Running security analysis...')
       
       // Perform actual analysis
-      const analysisResults = await analyzeContract(code, {
-        timeout: import.meta.env.VITE_ANALYSIS_TIMEOUT || 30000,
-        detectors: [], // Use all available detectors
-        optimizations: true
-      })
+      const analysisResults = await analyzeContract(code)
       
       if (abortController.current.signal.aborted) {
         throw new Error('Analysis cancelled')

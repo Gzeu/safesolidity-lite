@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { AlertTriangle, Shield, Code, FileText, Github } from 'lucide-react'
 import SolidityEditor from './components/editor/SolidityEditor'
 import AuditPanel from './components/audit/AuditPanel'

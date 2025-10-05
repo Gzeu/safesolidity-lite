@@ -1,5 +1,5 @@
 import React from 'react'
-import { AuditResults, AuditStatus } from '@/types/audit.types'
+import { AuditResults } from '@/types/audit.types'
 import VulnerabilityList from './VulnerabilityList'
 import AuditProgress from './AuditProgress'
 import { ExportButton } from '../export/ExportButton'

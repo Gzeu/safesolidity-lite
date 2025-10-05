@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
-import { EditorConfig, EditorState, VulnerabilityMarker } from '@/types/editor.types'
+import { EditorConfig, VulnerabilityMarker } from '@/types/editor.types'
 import { setupSolidityLanguage } from './EditorTheme'
 
 interface SolidityEditorProps {
