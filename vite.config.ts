@@ -4,6 +4,7 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/safesolidity-lite/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -20,6 +21,7 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    assetsInlineLimit: 0,
     rollupOptions: {
       output: {
         manualChunks: {
