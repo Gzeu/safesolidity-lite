@@ -1,143 +1,72 @@
-import { useState } from 'react'
-import { AlertTriangle, Shield, Code, FileText, Github } from 'lucide-react'
-import SolidityEditor from './components/editor/SolidityEditor'
-import AuditPanel from './components/audit/AuditPanel'
-import { useWasmLoader } from './hooks/useWasmLoader'
-import { useCodeAnalysis } from './hooks/useCodeAnalysis'
+import { useState } from 'react';
+import { analyzeSource } from './utils/vulnerability-matcher';
+import { vulnerableExample } from './utils/examples';
 
-function App() {
-  const [code, setCode] = useState('')
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const { isWasmReady, wasmError } = useWasmLoader()
-  const { analyzeCode, results, error } = useCodeAnalysis()
+export default function App() {
+  const [code, setCode] = useState(vulnerableExample);
+  const [results, setResults] = useState(() => analyzeSource(vulnerableExample));
 
-  const handleCodeChange = (newCode: string) => {
-    setCode(newCode)
-  }
+  const runAnalysis = () => setResults(analyzeSource(code));
 
-  const handleAnalyze = async () => {
-    if (!code.trim() || !isWasmReady) return
-    
-    setIsAnalyzing(true)
-    try {
-      await analyzeCode(code)
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }
+  const exportJSON = () => {
+    const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: 'audit.json' });
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  const badge = (sev: string) => {
+    const color = sev === 'CRITICAL' ? '#ef4444'
+      : sev === 'HIGH' ? '#f97316'
+      : sev === 'MEDIUM' ? '#f59e0b'
+      : '#10b981';
+    return { background: color, color: 'white', borderRadius: 6, padding: '2px 6px', fontSize: 12 } as const;
+  };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Shield className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-2xl font-bold">SafeSolidity Lite</h1>
-                <p className="text-sm text-muted-foreground">
-                  Rapid Smart Contract Auditing
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              {wasmError && (
-                <div className="flex items-center gap-2 text-destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span className="text-sm">WASM Loading Failed</span>
-                </div>
-              )}
-              
-              {!isWasmReady && !wasmError && (
-                <div className="text-sm text-muted-foreground">
-                  Loading Analysis Engine...
-                </div>
-              )}
-              
-              <a
-                href="https://github.com/Gzeu/safesolidity-lite"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-            </div>
-          </div>
+    <div style={{ minHeight: '100vh', background: '#0B1220', color: '#E5E7EB', padding: 16 }}>
+      <h1 style={{ fontSize: 24, marginBottom: 12 }}>SafeSolidity Lite — MVP</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div>
+          <h2 style={{ marginBottom: 8 }}>Editor</h2>
+          <textarea
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            style={{ width: '100%', height: 400, fontFamily: 'monospace', background: '#0F172A', color: '#E5E7EB', border: '1px solid #1F2937', borderRadius: 8, padding: 12 }}
+          />
+          <button onClick={runAnalysis} style={{ marginTop: 12, padding: '8px 12px', background: '#2563EB', color: 'white', borderRadius: 8, border: 'none' }}>
+            Rulează analiza
+          </button>
+          <button onClick={exportJSON} style={{ marginTop: 12, marginLeft: 8, padding: '8px 12px', background: '#10B981', color: 'white', borderRadius: 8, border: 'none' }}>
+            Export JSON
+          </button>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
-          {/* Editor Panel */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Code className="h-5 w-5" />
-                <h2 className="text-lg font-semibold">Solidity Editor</h2>
-              </div>
-              
-              <button
-                onClick={handleAnalyze}
-                disabled={!code.trim() || !isWasmReady || isAnalyzing}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isAnalyzing && (
-                  <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                )}
-                {isAnalyzing ? 'Analyzing...' : 'Analyze Contract'}
-              </button>
-            </div>
-            
-            <div className="h-full border border-border rounded-md overflow-hidden">
-              <SolidityEditor 
-                value={code}
-                onChange={handleCodeChange}
-                isReadOnly={isAnalyzing}
-              />
-            </div>
-          </div>
-
-          {/* Audit Panel */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              <h2 className="text-lg font-semibold">Audit Results</h2>
-            </div>
-            
-            <div className="h-full border border-border rounded-md overflow-hidden">
-              <AuditPanel 
-                results={results}
-                isAnalyzing={isAnalyzing}
-                error={error || wasmError}
-              />
-            </div>
-          </div>
+        <div>
+          <h2 style={{ marginBottom: 8 }}>Rezultate</h2>
+          {results.vulnerabilities.length === 0 ? (
+            <div style={{ color: '#9CA3AF' }}>Nicio problemă detectată</div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {results.vulnerabilities.map((v, i) => (
+                <li key={i} style={{ background: '#111827', border: '1px solid '#1F2937', padding: 12, borderRadius: 8, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <strong>{v.title}</strong>
+                    <span style={badge(v.severity)}>{v.severity}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>
+                    Linie: {v.line ?? '-'}
+                  </div>
+                  {v.snippet && (
+                    <pre style={{ marginTop: 6, background: '#0B1220', padding: 8, borderRadius: 6, overflowX: 'auto' }}>
+                      {v.snippet}
+                    </pre>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-border bg-card mt-auto">
-        <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
-          <p>
-            Built with ❤️ by{' '}
-            <a 
-              href="https://github.com/Gzeu" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              George Pricop
-            </a>
-            {' '} • Powered by WebAssembly & Slither
-          </p>
-        </div>
-      </footer>
+      </div>
     </div>
-  )
+  );
 }
-
-export default App
