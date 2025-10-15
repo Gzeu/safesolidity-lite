@@ -4,30 +4,43 @@
 
 SafeSolidity Lite is a modern, browser-based tool that enables developers to quickly audit Solidity smart contracts directly in their browser. Using WebAssembly for local static analysis, it ensures complete privacy and security while delivering professional-grade vulnerability detection.
 
+[![CI/CD Pipeline](https://github.com/Gzeu/safesolidity-lite/actions/workflows/main.yml/badge.svg)](https://github.com/Gzeu/safesolidity-lite/actions/workflows/main.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18-green.svg)
 ![React](https://img.shields.io/badge/react-18.3.1-blue.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.6.2-blue.svg)
 ![Pages](https://img.shields.io/badge/GitHub%20Pages-auto--deploy-success)
 
+## 🌐 Live Demo
+
+**Try SafeSolidity Lite now:** [https://gzeu.github.io/safesolidity-lite](https://gzeu.github.io/safesolidity-lite)
+
+*Auto-deployed from main branch via GitHub Actions*
+
 ## 🚀 MVP Quick Start
 
-- npm ci
-- npm run dev
-- Open the local URL shown by Vite (e.g., http://localhost:5173)
+**Local Development:**
+```bash
+npm ci
+npm run dev
+```
+Open the local URL shown by Vite (e.g., http://localhost:5173)
 
-Build & Deploy (auto on main):
-- npm run build (locally, optional)
-- Push to main → GitHub Actions builds and deploys to GitHub Pages automatically
+**Build & Deploy (auto on main):**
+```bash
+npm run build    # locally, optional
+git push origin main    # → GitHub Actions builds and deploys to GitHub Pages
+```
 
-> Tip: In repo Settings → Pages, set Source to “GitHub Actions” (one-time).
+> **Tip**: In repo Settings → Pages, set Source to "GitHub Actions" (one-time).
 
 ## 🎯 MVP Capabilities
 
-- In-browser rule-based analysis for common vulnerabilities:
+- **In-browser rule-based analysis** for common vulnerabilities:
   - Reentrancy, tx.origin misuse, timestamp dependence, unchecked external calls
-- Minimal UI: textarea editor, “Rulează analiza”, results with severity badges, Export JSON
-- No backend, fully static, ready for GitHub Pages
+- **Minimal UI**: textarea editor, "Rulează analiza", results with severity badges, Export JSON
+- **No backend**, fully static, ready for GitHub Pages
+- **Instant feedback**: analyze contracts without server uploads
 
 ---
 
@@ -53,16 +66,27 @@ src/
 ## 📋 Scripts
 
 | Command | Description |
-|---------|-------------|
+|---------|-----------|
 | `npm run dev` | Start development server |
 | `npm run build` | Build for production |
 | `npm run preview` | Preview production build |
+| `npm run type-check` | TypeScript type checking |
+| `npm run lint` | Lint code |
+| `npm test` | Run tests |
 
 ## 🚀 Deployment
 
-- Deploy Static Build workflow uploads dist as artifact on each push to main
-- Deploy to GitHub Pages workflow publishes dist to Pages automatically
-- After a successful run, the live URL is visible under Environments → github-pages
+- **Unified CI/CD Pipeline**: build & test on all branches, deploy to Pages only on main
+- **GitHub Actions**: automatic build verification and deployment
+- **Live URL**: available under Environments → github-pages after successful deploy
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open Pull Request (auto-tested by CI)
 
 ## 📝 License
 
