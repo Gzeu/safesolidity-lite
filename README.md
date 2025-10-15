@@ -1,4 +1,4 @@
-# SafeSolidity Lite 🛡️
+# SafeSolidity Lite 
 
 > **Web-based frontend application for rapid Solidity smart contract auditing using WebAssembly**
 
@@ -8,6 +8,8 @@ SafeSolidity Lite is a modern, browser-based tool that enables developers to qui
 ![Node](https://img.shields.io/badge/node-%3E%3D18-green.svg)
 ![React](https://img.shields.io/badge/react-18.3.1-blue.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.6.2-blue.svg)
+![CI](https://github.com/Gzeu/safesolidity-lite/actions/workflows/ci.yml/badge.svg)
+![GitHub Pages](https://github.com/Gzeu/safesolidity-lite/actions/workflows/pages.yml/badge.svg)
 
 ## 🚀 Features
 
